@@ -1,4 +1,4 @@
-# rocket-guard
+# rocket-guard-rs
 
 Application-layer security middleware (Fairing) for [Rocket](https://github.com/rwf2/Rocket). Part of the [guard ecosystem](https://github.com/rennf93).
 

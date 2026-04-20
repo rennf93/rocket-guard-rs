@@ -1,13 +1,13 @@
 [package]
-name = "rocket-guard"
+name = "rocket-guard-rs"
 version = "0.0.1"
 edition = "2024"
 description = "Application-layer security Fairing for Rocket. Part of the guard ecosystem. WIP."
 license = "MIT"
-repository = "https://github.com/rennf93/rocket-guard"
+repository = "https://github.com/rennf93/rocket-guard-rs"
 readme = "README.md"
 keywords = ["security", "middleware", "api"]
 categories = ["web-programming"]
 
 [lib]
-name = "rocket_guard"
+name = "rocket_guard_rs"
