@@ -2,8 +2,9 @@
 name = "rocket-guard-rs"
 version = "0.0.1"
 edition = "2024"
+rust-version = "1.92"
 description = "Application-layer security Fairing for Rocket. Part of the guard ecosystem. WIP."
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/rennf93/rocket-guard-rs"
 readme = "README.md"
 keywords = ["security", "middleware", "api"]
