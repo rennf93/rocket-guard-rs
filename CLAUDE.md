@@ -10,13 +10,13 @@ rocket-guard-rs is the reserved namespace for the Rocket adapter of the Guard ec
 - `src/lib.rs` is the stock 14-line `cargo new` scaffold: one `add(left, right)` function and one trivial unit test. There is no fairing, no guard code, no placeholder types.
 - `Cargo.toml` declares version 0.0.1, edition 2024, MIT, and **no dependencies at all** (not even rocket).
 - No workflow runs any cargo command. The five workflows under `.github/` are label, greeting, stale, and issue-summary automation only.
-- `README.md` status line: "Reserved namespace. Implementation pending."
+- `README.md` status line reflected the pre-implementation state; this file and the README now describe the shipped adapter.
 
 - **Repository**: https://github.com/rennf93/rocket-guard-rs
 - **Language**: Rust, edition 2024 (requires Rust 1.85 or newer)
 - **License**: MIT
 - **Version**: 0.0.1 (pre-release, not published to crates.io)
-- **Status**: scaffold, implementation pending
+- **Status**: implemented and tested. Not published to crates.io: the engine is a local path dependency until it is tagged (see [Engine Dependency](#engine-dependency)).
 
 ## Ecosystem Position
 
@@ -34,7 +34,7 @@ The engine crate stays framework-free (no I/O, no tokio, no framework types). Th
 
 ## Status
 
-Scaffold, implementation pending. Concretely, what does not exist:
+Scaffold, implemented. Concretely, what does not exist:
 
 - No dependency on rocket or guard-core-rs
 - No Fairing implementation, no configuration type, no response mapping
