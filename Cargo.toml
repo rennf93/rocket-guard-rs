@@ -1,14 +1,35 @@
 [package]
 name = "rocket-guard-rs"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2024"
 rust-version = "1.92"
-description = "Application-layer security Fairing for Rocket. Part of the guard ecosystem. WIP."
+description = "Application-layer security Fairing for Rocket, powered by the guard-core-rs engine. Part of the guard ecosystem."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rennf93/rocket-guard-rs"
 readme = "README.md"
-keywords = ["security", "middleware", "api"]
+keywords = ["security", "middleware", "api", "rocket", "fairing"]
 categories = ["web-programming"]
 
 [lib]
 name = "rocket_guard_rs"
+
+[dependencies]
+# TODO(engine): switch to the versioned crates.io dependency once guard-core-rs
+# is tagged and published. The path points at the engine crate inside the
+# guard-core-rs workspace; a sibling checkout is required for local builds and
+# CI checks out one (see .github/workflows/ci.yml).
+guard-core-engine = { path = "../guard-core-rs/crates/guard-core-engine" }
+rocket = { version = "0.5.1", default-features = false }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all                     = { level = "deny", priority = -1 }
+pedantic                = { level = "warn", priority = -1 }
+missing_errors_doc      = "allow"
+missing_panics_doc      = "allow"
+module_name_repetitions = "allow"

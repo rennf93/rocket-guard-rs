@@ -9,7 +9,7 @@ Reserved namespace for the Rocket adapter of the Guard ecosystem. Currently a sc
 
 ## Quick Reference
 
-- Status: scaffold, implementation pending. Version 0.0.1, edition 2024, MIT, not published.
+- Status: implemented. Version 0.0.1, edition 2024, MIT, not published.
 - Engine: [guard-core-rs](https://github.com/rennf93/guard-core-rs) (itself pre-1.0).
 - This adapter holds framework glue only; all security logic belongs in the engine.
 
@@ -29,7 +29,7 @@ cd rocket-guard-rs
 
 ## Status
 
-What exists: one 14-line stub with an `add()` function and one unit test, automation workflows (greetings, labeler, stale, summary, sync-labels), MIT license, README marked "Reserved namespace. Implementation pending."
+What exists: one 14-line stub with an `add()` function and one unit test, automation workflows (greetings, labeler, stale, summary, sync-labels), MIT license, README marked "Implemented (v0.1.0)."
 
 What does not exist: any rocket or guard-core-rs dependency, any Fairing code, any configuration type, any real tests, any CI that compiles the crate. Do not describe this crate as functional, integrated, or published.
 
