@@ -867,6 +867,7 @@ dependencies = [
  "rocket_codegen",
  "rocket_http",
  "serde",
+ "serde_json",
  "state",
  "tempfile",
  "time",
@@ -879,11 +880,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "rocket-guard-advanced-app"
+version = "0.1.0"
+dependencies = [
+ "rocket",
+ "rocket-guard-rs",
+ "tokio",
+]
+
+[[package]]
 name = "rocket-guard-rs"
 version = "0.1.0"
 dependencies = [
  "guard-core-engine",
  "rocket",
+ "tokio",
+]
+
+[[package]]
+name = "rocket-guard-simple-app"
+version = "0.1.0"
+dependencies = [
+ "rocket",
+ "rocket-guard-rs",
  "tokio",
 ]
 
