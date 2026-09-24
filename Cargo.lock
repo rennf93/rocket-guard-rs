@@ -343,7 +343,7 @@ checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
 
 [[package]]
 name = "guard-core-engine"
-version = "0.0.1"
+version = "4.0.4"
 dependencies = [
  "html-escape",
  "lru",
@@ -890,7 +890,7 @@ dependencies = [
 
 [[package]]
 name = "rocket-guard-rs"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "guard-core-engine",
  "rocket",
