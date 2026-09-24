@@ -1,0 +1,1143 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Application-layer security fairing and guards for Rocket, powered by the guard-core-rs detection engine">
+      
+      
+        <meta name="author" content="Renn F">
+      
+      
+      
+        <link rel="prev" href="../installation/">
+      
+      
+        <link rel="next" href="../examples/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>API - rocket-guard-rs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="rocket-guard-rs" class="md-header__button md-logo" aria-label="rocket-guard-rs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            rocket-guard-rs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rennf93/rocket-guard-rs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rennf93/rocket-guard-rs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="rocket-guard-rs" class="md-nav__button md-logo" aria-label="rocket-guard-rs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    rocket-guard-rs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rennf93/rocket-guard-rs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rennf93/rocket-guard-rs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#fairing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fairing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fairing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guardfairing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GuardFairing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catchers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#guards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Guards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#blockguard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BlockGuard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guardbody" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GuardBody
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guardbodyerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GuardBodyError
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default_config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        default_config()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#detectconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DetectConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-it-inspects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it inspects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Responses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#engine-re-exports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engine re-exports
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#fairing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fairing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fairing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guardfairing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GuardFairing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catchers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#guards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Guards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#blockguard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BlockGuard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guardbody" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GuardBody
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guardbodyerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GuardBodyError
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default_config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        default_config()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#detectconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DetectConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-it-inspects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it inspects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Responses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#engine-re-exports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engine re-exports
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="api-reference">API reference</h1>
+<p>The public surface of <code>rocket_guard_rs</code> <code>1.0.0</code>. The full crate documentation
+is also in <code>src/lib.rs</code> (build it with <code>cargo doc --open</code>).</p>
+<h2 id="fairing">Fairing</h2>
+<h3 id="guardfairing"><code>GuardFairing</code></h3>
+<p>The Rocket fairing that screens every request and registers the refusal
+catchers. Attach it once on <code>rocket::build()</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">rocket</span><span class="p">::</span><span class="n">build</span><span class="p">().</span><span class="n">attach</span><span class="p">(</span><span class="n">rocket_guard_rs</span><span class="p">::</span><span class="n">GuardFairing</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+</code></pre></div>
+<p>Attach with <code>Kind::Ignite | Kind::Request | Kind::Response</code> (the default
+<code>Kind</code> set the fairing declares): <code>on_ignite</code> registers the <code>403</code>/<code>413</code>/<code>500</code>
+catchers, <code>on_request</code> scans the path, query, and header views and stashes
+the verdict in request-local state, and <code>on_response</code> supports the <code>404</code> to
+<code>403</code> rewrite described below.</p>
+<p>Constructors and builders:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GuardFairing::new(config: DetectConfig)</code></td>
+<td>Build the fairing from an engine <code>DetectConfig</code>. The body cap starts at <code>config.max_full_scan_bytes</code></td>
+</tr>
+<tr>
+<td><code>GuardFairing::with_defaults()</code></td>
+<td>Build the fairing with <code>default_config()</code></td>
+</tr>
+<tr>
+<td><code>.with_body_cap(body_cap: usize)</code></td>
+<td>Replace the body buffering cap, in bytes. A body larger than the cap is refused with <code>413</code> rather than forwarded unscanned</td>
+</tr>
+</tbody>
+</table>
+<p>Routes without a guard argument are only scanned, not blocked: in Rocket,
+protection is per-route, and that is what the guard argument is for. When the
+verdict is a threat and the request would otherwise answer <code>404</code>, the fairing
+rewrites the <code>404</code> to the guarded <code>403</code> so probe traffic never reveals route
+inventory.</p>
+<h3 id="catchers">Catchers</h3>
+<p><code>guard_catchers() -&gt; Vec&lt;Catcher&gt;</code> returns the <code>403</code>/<code>413</code>/<code>500</code> catchers
+that render refusals as the ecosystem's JSON error shape. The fairing
+registers them itself, skipping any status the application already registered
+a catcher for (Rocket treats same-code catchers at the same base as a fatal
+collision).</p>
+<h2 id="guards">Guards</h2>
+<h3 id="blockguard"><code>BlockGuard</code></h3>
+<p>A request guard for routes without a body argument:</p>
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">rocket</span><span class="p">::</span><span class="n">get</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="n">rocket_guard_rs</span><span class="p">::</span><span class="n">BlockGuard</span><span class="p">;</span>
+
+<span class="cp">#[get(</span><span class="s">"/health"</span><span class="cp">)]</span>
+<span class="k">fn</span><span class="w"> </span><span class="nf">health</span><span class="p">(</span><span class="n">_guard</span><span class="p">:</span><span class="w"> </span><span class="nc">BlockGuard</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="kp">&amp;</span><span class="o">'</span><span class="nb">static</span><span class="w"> </span><span class="kt">str</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s">"hello"</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>It enforces the verdict stashed by the fairing: a threat answers <code>403</code>, a
+failed check answers <code>500</code>. Fail-secure rule: if the guard cannot find a
+verdict, the security system is not running, and the request is refused
+rather than passed uninspected.</p>
+<h3 id="guardbody"><code>GuardBody</code></h3>
+<p>The scanned request body, usable as a data guard. Buffering, scanning, and
+handing the body to the handler are fused into one data guard because
+Rocket's <code>Data</code> is a one-shot stream:</p>
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">rocket</span><span class="p">::</span><span class="n">post</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="n">rocket_guard_rs</span><span class="p">::</span><span class="n">GuardBody</span><span class="p">;</span>
+
+<span class="cp">#[post(</span><span class="s">"/submit"</span><span class="cp">, data = </span><span class="s">"&lt;body&gt;"</span><span class="cp">)]</span>
+<span class="k">fn</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span><span class="n">body</span><span class="p">:</span><span class="w"> </span><span class="nc">GuardBody</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Vec</span><span class="o">&lt;</span><span class="kt">u8</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">body</span><span class="p">.</span><span class="n">into_inner</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>As a data argument (<code>data = "&lt;body&gt;"</code>), it refuses the request on any of the
+fairing's metadata views and scans the body itself. The body is buffered up
+to the cap configured on <code>GuardFairing::with_body_cap</code> (default: the engine's
+full-scan cap, 262,144 bytes). Rocket's own per-guard <code>limits</code> still apply to
+whatever the handler does with the scanned bytes afterwards.</p>
+<p>Methods:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.into_inner() -&gt; Vec&lt;u8&gt;</code></td>
+<td>Consume the guard and return the scanned bytes</td>
+</tr>
+<tr>
+<td><code>.as_slice() -&gt; &amp;[u8]</code></td>
+<td>Borrow the scanned bytes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="guardbodyerror"><code>GuardBodyError</code></h3>
+<p>The error type produced when the body cannot be buffered or scanned.</p>
+<h2 id="configuration">Configuration</h2>
+<h3 id="default_config"><code>default_config()</code></h3>
+<p>Returns the reference default <code>DetectConfig</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Knob</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_content_length</code></td>
+<td><code>10_000</code></td>
+</tr>
+<tr>
+<td><code>max_full_scan_bytes</code></td>
+<td><code>262_144</code></td>
+</tr>
+<tr>
+<td><code>preserve_attack_patterns</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>semantic_threshold</code></td>
+<td><code>0.7</code></td>
+</tr>
+<tr>
+<td><code>threat_score_threshold</code></td>
+<td><code>1.0</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="detectconfig"><code>DetectConfig</code></h3>
+<p>Re-exported from <code>guard_core_engine::detect</code>. Fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_content_length</code></td>
+<td><code>usize</code></td>
+<td>Semantic budget and truncation budget</td>
+</tr>
+<tr>
+<td><code>max_full_scan_bytes</code></td>
+<td><code>usize</code></td>
+<td>Preprocessor full-scan cap (also the default body cap)</td>
+</tr>
+<tr>
+<td><code>preserve_attack_patterns</code></td>
+<td><code>bool</code></td>
+<td>Keep attack patterns in the processed view</td>
+</tr>
+<tr>
+<td><code>semantic_threshold</code></td>
+<td><code>f64</code></td>
+<td>Semantic analysis threshold</td>
+</tr>
+<tr>
+<td><code>threat_score_threshold</code></td>
+<td><code>f64</code></td>
+<td>Threat score threshold for a verdict</td>
+</tr>
+</tbody>
+</table>
+<h2 id="behavior">Behavior</h2>
+<h3 id="what-it-inspects">What it inspects</h3>
+<p>One engine call per request view:</p>
+<table>
+<thead>
+<tr>
+<th>Request part</th>
+<th>Engine context</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Path</td>
+<td><code>url_path</code></td>
+<td>Skipped for <code>/</code></td>
+</tr>
+<tr>
+<td>Query string</td>
+<td><code>query_param</code></td>
+<td>Skipped when empty</td>
+</tr>
+<tr>
+<td>Header values</td>
+<td><code>header</code></td>
+<td>Skips <code>sec-*</code> and the negotiation/routing headers</td>
+</tr>
+<tr>
+<td>Body</td>
+<td><code>request_body</code></td>
+<td>Buffered by <code>GuardBody</code>, capped</td>
+</tr>
+</tbody>
+</table>
+<p>The HTTP method is not scanned.</p>
+<h3 id="responses">Responses</h3>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Status</th>
+<th>Body</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engine flags a view</td>
+<td><code>403 Forbidden</code></td>
+<td><code>{"detail":"Suspicious activity detected"}</code></td>
+</tr>
+<tr>
+<td>Body exceeds the cap</td>
+<td><code>413 Payload Too Large</code></td>
+<td><code>{"detail":"Payload too large"}</code></td>
+</tr>
+<tr>
+<td>Body read error or engine panic</td>
+<td><code>500 Internal Server Error</code></td>
+<td><code>{"detail":"Security check failed"}</code></td>
+</tr>
+</tbody>
+</table>
+<p>The adapter is fail-secure: any failure to complete the security check
+answers <code>500</code>, never an uninspected passthrough. Engine panics are caught
+with <code>catch_unwind</code> (note that <code>panic = "abort"</code> in a release profile
+disables that recovery).</p>
+<h3 id="constants">Constants</h3>
+<p>Re-exported refusal message bodies:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BLOCKED_MESSAGE</code></td>
+<td><code>"Suspicious activity detected"</code></td>
+</tr>
+<tr>
+<td><code>OVERSIZE_MESSAGE</code></td>
+<td><code>"Payload too large"</code></td>
+</tr>
+<tr>
+<td><code>FAILURE_MESSAGE</code></td>
+<td><code>"Security check failed"</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="engine-re-exports">Engine re-exports</h3>
+<p><code>DetectConfig</code>, <code>DetectVerdict</code>, and <code>Threat</code> are re-exported from
+<code>guard_core_engine::detect</code>. A <code>DetectVerdict</code> carries <code>is_threat</code>, a
+<code>threat_score</code>, and the list of <code>Threat</code> findings (regex or semantic).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "navigation.sections"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
