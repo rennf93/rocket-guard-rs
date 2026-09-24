@@ -2,7 +2,7 @@
 
 Application-layer security middleware for [Rocket](https://rocket.rs) 0.5, powered by the [guard-core-rs](https://github.com/rennf93/guard-core-rs) detection engine. Part of the [guard ecosystem](https://github.com/rennf93).
 
-Docs: https://rennf93.github.io/rocket-guard-rs/
+Docs: <https://rennf93.github.io/rocket-guard-rs/>
 
 **Status:** Released. Version 1.0.0, published to crates.io. `GuardFairing`, `BlockGuard`, and `GuardBody` are working Rocket integration, screened by the engine.
 
