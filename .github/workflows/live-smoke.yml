@@ -77,7 +77,7 @@ jobs:
           check "GET /search benign query"     200 -G "$base/search" --data-urlencode 'q=hello'
 
           # Penetration detection: XSS payload in a query parameter is blocked
-          # with the adapter's JSON error body.
+          # with the adapter's plain-text error body.
           code=$(curl -sS --max-time 10 -o /tmp/smoke_body -w '%{http_code}' \
             -G "$base/search" --data-urlencode 'q=<script>alert(1)</script>')
           if [ "$code" != "403" ]; then

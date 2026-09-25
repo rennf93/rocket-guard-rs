@@ -3,7 +3,8 @@
 //! Rocket guards cannot respond directly: an error outcome is dispatched to
 //! the error catcher for its status. The adapter therefore registers catchers
 //! for the three statuses its guards can produce, so every refusal carries
-//! the ecosystem's JSON error shape (a `detail` field, `application/json`).
+//! the ecosystem's error shape (the bare message, `text/plain; charset=utf-8`,
+//! same as the Python family).
 //!
 //! Scoping: the `403` and `500` catchers only emit the guard body when
 //! request-local state shows the refusal came from this adapter's guards
@@ -100,14 +101,13 @@ fn failure<'r>(status: Status, request: &'r Request<'_>) -> BoxFuture<'r> {
     )
 }
 
-/// The catcher response: `application/json` with a `detail` field.
-fn finish<'r>(status: Status, detail: &'static str) -> BoxFuture<'r> {
-    let body = format!(r#"{{"detail":"{detail}"}}"#);
+/// The catcher response: the bare message, `text/plain; charset=utf-8`.
+fn finish<'r>(status: Status, message: &'static str) -> BoxFuture<'r> {
     Box::pin(async move {
         Ok(Response::build()
             .status(status)
-            .header(ContentType::JSON)
-            .sized_body(body.len(), Cursor::new(body.into_bytes()))
+            .header(ContentType::Plain)
+            .sized_body(message.len(), Cursor::new(message.as_bytes().to_vec()))
             .finalize())
     })
 }
@@ -115,10 +115,12 @@ fn finish<'r>(status: Status, detail: &'static str) -> BoxFuture<'r> {
 /// A standalone `403` response with the blocked body, used by
 /// [`crate::GuardFairing`] when rewriting unrouted threat responses.
 pub(crate) fn blocked_response() -> Response<'static> {
-    let body = format!(r#"{{"detail":"{BLOCKED_MESSAGE}"}}"#);
     Response::build()
         .status(Status::Forbidden)
-        .header(ContentType::JSON)
-        .sized_body(body.len(), Cursor::new(body.into_bytes()))
+        .header(ContentType::Plain)
+        .sized_body(
+            BLOCKED_MESSAGE.len(),
+            Cursor::new(BLOCKED_MESSAGE.as_bytes().to_vec()),
+        )
         .finalize()
 }

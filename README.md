@@ -66,11 +66,11 @@ The HTTP method is not fed to the engine: the engine's `detect(content, context,
 
 | Situation | Status | Body |
 |---|---|---|
-| Engine flags a view | `403 Forbidden` | `{"detail":"Suspicious activity detected"}` |
-| Body exceeds the cap | `413 Payload Too Large` | `{"detail":"Payload too large"}` |
-| Body read error or engine panic | `500 Internal Server Error` | `{"detail":"Security check failed"}` |
+| Engine flags a view | `403 Forbidden` | `Suspicious activity detected` |
+| Body exceeds the cap | `413 Payload Too Large` | `Payload too large` |
+| Body read error or engine panic | `500 Internal Server Error` | `Security check failed` |
 
-The bodies mirror the ecosystem's JSON `detail` error shape (same as the Python and TypeScript adapters), but the adapter is deliberately **fail-secure**: unlike the TypeScript adapters, whose check pipeline logs and skips on error, any failure to complete the security check answers `500`, never an uninspected passthrough. A guard with no stashed verdict (fairing not attached) also refuses with `500`.
+The bodies follow the ecosystem's plain-text error convention (the bare message, `text/plain; charset=utf-8`, same as the Python family), but the adapter is deliberately **fail-secure**: unlike the TypeScript adapters, whose check pipeline logs and skips on error, any failure to complete the security check answers `500`, never an uninspected passthrough. A guard with no stashed verdict (fairing not attached) also refuses with `500`.
 
 Engine panics are caught with `catch_unwind`, so a detected panic still produces a response instead of unwinding out of the request. `panic = "abort"` in the release profile disables that recovery.
 
@@ -85,7 +85,7 @@ let fairing = rocket_guard_rs::GuardFairing::with_defaults()
     .with_body_cap(1_048_576);
 ```
 
-A body larger than the cap is rejected with `413` rather than forwarded unscanned. Rocket's own `limits` continue to apply inside handlers; a limit violation raised by Rocket's guards (for example `Json`) is also a `413` error outcome and therefore also gets the `{"detail":"Payload too large"}` body.
+A body larger than the cap is rejected with `413` rather than forwarded unscanned. Rocket's own `limits` continue to apply inside handlers; a limit violation raised by Rocket's guards (for example `Json`) is also a `413` error outcome and therefore also gets the plain-text `Payload too large` body.
 
 ## Engine dependency
 

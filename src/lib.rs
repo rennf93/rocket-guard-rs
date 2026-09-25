@@ -27,7 +27,7 @@
 //!    Kind::Response`). Its `on_request` scans the path, query, and header
 //!    views and stashes the verdict in request-local state. Its `on_ignite`
 //!    registers the `403`/`413`/`500` catchers that render refusals as the
-//!    ecosystem's JSON error shape (skipping any status the application
+//!    ecosystem's plain-text error shape (skipping any status the application
 //!    already registered a catcher for, because Rocket treats same-code
 //!    catchers at the same base as a fatal collision).
 //! 2. **Add a guard argument to each protected route**: [`BlockGuard`] for
@@ -95,17 +95,18 @@
 //! `413 Payload Too Large` rather than forwarded unscanned. Rocket's own
 //! `limits` continue to apply inside handlers; a limit violation raised by
 //! Rocket's guards (for example `Json`) is also a `413` error outcome, and
-//! therefore also gets the `{"detail":"Payload too large"}` body.
+//! therefore also gets the `Payload too large` body.
 //!
 //! ## Responses
 //!
 //! | Situation | Status | Body |
 //! |---|---|---|
-//! | Engine flags a view | `403 Forbidden` | `{"detail":"Suspicious activity detected"}` |
-//! | Body exceeds the cap | `413 Payload Too Large` | `{"detail":"Payload too large"}` |
-//! | Body read error or engine panic | `500 Internal Server Error` | `{"detail":"Security check failed"}` |
+//! | Engine flags a view | `403 Forbidden` | `Suspicious activity detected` |
+//! | Body exceeds the cap | `413 Payload Too Large` | `Payload too large` |
+//! | Body read error or engine panic | `500 Internal Server Error` | `Security check failed` |
 //!
-//! These bodies mirror the ecosystem's error shape (a JSON `detail` field)
+//! These bodies follow the ecosystem's plain-text convention (the bare
+//! message, `text/plain; charset=utf-8`, same as the Python family)
 //! but the adapter is deliberately **fail-secure**, unlike the TypeScript
 //! adapters whose check pipeline logs and skips on error: any failure to
 //! complete the security check results in `500`, never in an uninspected

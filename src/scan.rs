@@ -47,7 +47,7 @@ pub(crate) struct Metadata(pub(crate) Option<Verdict>);
 /// Request-local slot written by a guard when it refuses a request.
 ///
 /// This is what lets the registered catchers tell a guard refusal (which gets
-/// the ecosystem `{"detail":...}` body) apart from an application error with
+/// the ecosystem plain-text body) apart from an application error with
 /// the same status (which keeps a minimal default body).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Enforced(pub(crate) Option<Verdict>);
@@ -148,7 +148,7 @@ pub(crate) fn enforced_verdict(request: &Request<'_>) -> Option<Verdict> {
 }
 
 /// Record why a guard is refusing this request, so the catcher can produce
-/// the ecosystem's JSON body instead of a generic default.
+/// the ecosystem's plain-text body instead of a generic default.
 pub(crate) fn record_enforced(request: &Request<'_>, verdict: Verdict) {
     request.local_cache(|| Enforced(Some(verdict)));
 }

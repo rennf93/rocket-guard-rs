@@ -37,7 +37,7 @@ inventory.
 ### Catchers
 
 `guard_catchers() -> Vec<Catcher>` returns the `403`/`413`/`500` catchers
-that render refusals as the ecosystem's JSON error shape. The fairing
+that render refusals as the ecosystem's plain-text error shape. The fairing
 registers them itself, skipping any status the application already registered
 a catcher for (Rocket treats same-code catchers at the same base as a fatal
 collision).
@@ -141,9 +141,9 @@ The HTTP method is not scanned.
 
 | Situation | Status | Body |
 |---|---|---|
-| Engine flags a view | `403 Forbidden` | `{"detail":"Suspicious activity detected"}` |
-| Body exceeds the cap | `413 Payload Too Large` | `{"detail":"Payload too large"}` |
-| Body read error or engine panic | `500 Internal Server Error` | `{"detail":"Security check failed"}` |
+| Engine flags a view | `403 Forbidden` | `Suspicious activity detected` |
+| Body exceeds the cap | `413 Payload Too Large` | `Payload too large` |
+| Body read error or engine panic | `500 Internal Server Error` | `Security check failed` |
 
 The adapter is fail-secure: any failure to complete the security check
 answers `500`, never an uninspected passthrough. Engine panics are caught
