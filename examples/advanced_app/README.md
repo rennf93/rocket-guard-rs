@@ -77,8 +77,8 @@ GUARD_BODY_CAP=65536 ROCKET_ADDRESS=127.0.0.1 ROCKET_PORT=8080 target/debug/rock
 |---|---|
 | `GET /health` | `200` |
 | `GET /admin/stats` | `200` |
-| `GET /search?q=<script>alert(1)</script>` | `403`, body `{"detail":"Suspicious activity detected"}` |
-| `POST /echo` with a body over `GUARD_BODY_CAP` | `413`, body `{"detail":"Payload too large"}` |
+| `GET /search?q=<script>alert(1)</script>` | `403`, body `Suspicious activity detected` |
+| `POST /echo` with a body over `GUARD_BODY_CAP` | `413`, body `Payload too large` |
 | `POST /echo` with a small body | `200`, body echoed |
 
 Tear down with:

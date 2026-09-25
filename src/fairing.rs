@@ -205,7 +205,7 @@ mod tests {
         assert_eq!(response.status(), Status::InternalServerError);
         assert_eq!(
             response.into_string().await.as_deref(),
-            Some(format!(r#"{{"detail":"{FAILURE_MESSAGE}"}}"#).as_str()),
+            Some(FAILURE_MESSAGE)
         );
     }
 }

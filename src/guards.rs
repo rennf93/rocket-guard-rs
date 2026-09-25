@@ -15,8 +15,8 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 /// | Stashed verdict | Outcome |
 /// |---|---|
 /// | Clean | `Success`: the handler runs |
-/// | Threat | `Error(403)`: `{"detail":"Suspicious activity detected"}` |
-/// | Failed (engine panic) | `Error(500)`: `{"detail":"Security check failed"}` |
+/// | Threat | `Error(403)`: the bare `Suspicious activity detected` message |
+/// | Failed (engine panic) | `Error(500)`: the bare `Security check failed` message |
 /// | Missing (fairing not attached) | `Error(500)`: fail-secure |
 ///
 /// Add it as an unused argument to every route without a body argument:
@@ -93,9 +93,9 @@ impl<'r> FromRequest<'r> for BlockGuard {
 ///
 /// | Situation | Status | Body |
 /// |---|---|---|
-/// | Engine flags any view | `403 Forbidden` | `{"detail":"Suspicious activity detected"}` |
-/// | Body exceeds the cap | `413 Payload Too Large` | `{"detail":"Payload too large"}` |
-/// | Body read error or engine panic | `500 Internal Server Error` | `{"detail":"Security check failed"}` |
+/// | Engine flags any view | `403 Forbidden` | `Suspicious activity detected` |
+/// | Body exceeds the cap | `413 Payload Too Large` | `Payload too large` |
+/// | Body read error or engine panic | `500 Internal Server Error` | `Security check failed` |
 #[derive(Debug)]
 pub struct GuardBody {
     bytes: Vec<u8>,

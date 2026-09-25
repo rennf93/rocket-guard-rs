@@ -41,7 +41,7 @@ Rocket requires:
    Kind::Response`). Its `on_request` scans the path, query, and header views
    and stashes the verdict in request-local state. Its `on_ignite` registers
    the `403`/`413`/`500` catchers that render refusals as the ecosystem's
-   JSON error shape.
+   plain-text error shape.
 2. **Add a guard argument to each protected route**: `BlockGuard` for routes
    without a body, `GuardBody` for routes with one. Protection is per-route,
    and the guard argument is Rocket's own mechanism for it.
@@ -103,9 +103,9 @@ The HTTP method is not scanned.
 
 | Situation | Status | Body |
 |---|---|---|
-| Engine flags a view | `403 Forbidden` | `{"detail":"Suspicious activity detected"}` |
-| Body exceeds the cap | `413 Payload Too Large` | `{"detail":"Payload too large"}` |
-| Body read error or engine panic | `500 Internal Server Error` | `{"detail":"Security check failed"}` |
+| Engine flags a view | `403 Forbidden` | `Suspicious activity detected` |
+| Body exceeds the cap | `413 Payload Too Large` | `Payload too large` |
+| Body read error or engine panic | `500 Internal Server Error` | `Security check failed` |
 
 ## Where to go next
 

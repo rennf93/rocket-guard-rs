@@ -80,12 +80,9 @@ async fn xss_payload_in_body_is_blocked() {
     assert_eq!(response.status(), Status::Forbidden);
     assert_eq!(
         response.headers().get_one("Content-Type"),
-        Some("application/json"),
+        Some("text/plain; charset=utf-8"),
     );
-    assert_eq!(
-        body_text(response).await,
-        format!(r#"{{"detail":"{BLOCKED_MESSAGE}"}}"#)
-    );
+    assert_eq!(body_text(response).await, BLOCKED_MESSAGE);
 }
 
 #[tokio::test]
@@ -93,10 +90,7 @@ async fn traversal_payload_in_path_is_blocked() {
     let client = guarded_client().await;
     let response = client.get("/files/../../etc/passwd").dispatch().await;
     assert_eq!(response.status(), Status::Forbidden);
-    assert_eq!(
-        body_text(response).await,
-        format!(r#"{{"detail":"{BLOCKED_MESSAGE}"}}"#)
-    );
+    assert_eq!(body_text(response).await, BLOCKED_MESSAGE);
 }
 
 #[tokio::test]
@@ -106,10 +100,7 @@ async fn command_injection_in_query_is_blocked() {
     let client = guarded_client().await;
     let response = client.get("/search?cmd=$(echo%20id)").dispatch().await;
     assert_eq!(response.status(), Status::Forbidden);
-    assert_eq!(
-        body_text(response).await,
-        format!(r#"{{"detail":"{BLOCKED_MESSAGE}"}}"#)
-    );
+    assert_eq!(body_text(response).await, BLOCKED_MESSAGE);
 }
 
 #[tokio::test]
@@ -146,10 +137,7 @@ async fn body_over_the_cap_is_rejected_with_413() {
         .dispatch()
         .await;
     assert_eq!(response.status(), Status::PayloadTooLarge);
-    assert_eq!(
-        body_text(response).await,
-        format!(r#"{{"detail":"{OVERSIZE_MESSAGE}"}}"#)
-    );
+    assert_eq!(body_text(response).await, OVERSIZE_MESSAGE);
 }
 
 #[tokio::test]
@@ -174,10 +162,7 @@ async fn unrouted_threat_path_gets_the_guarded_403_not_a_404() {
         .expect("valid rocket");
     let response = client.get("/private/../../etc/passwd").dispatch().await;
     assert_eq!(response.status(), Status::Forbidden);
-    assert_eq!(
-        body_text(response).await,
-        format!(r#"{{"detail":"{BLOCKED_MESSAGE}"}}"#)
-    );
+    assert_eq!(body_text(response).await, BLOCKED_MESSAGE);
 }
 
 #[tokio::test]
