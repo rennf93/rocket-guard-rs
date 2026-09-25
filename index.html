@@ -627,7 +627,7 @@ Rocket requires:</p>
    Kind::Response</code>). Its <code>on_request</code> scans the path, query, and header views
    and stashes the verdict in request-local state. Its <code>on_ignite</code> registers
    the <code>403</code>/<code>413</code>/<code>500</code> catchers that render refusals as the ecosystem's
-   JSON error shape.</li>
+   plain-text error shape.</li>
 <li><strong>Add a guard argument to each protected route</strong>: <code>BlockGuard</code> for routes
    without a body, <code>GuardBody</code> for routes with one. Protection is per-route,
    and the guard argument is Rocket's own mechanism for it.</li>
@@ -711,17 +711,17 @@ adapters:</p>
 <tr>
 <td>Engine flags a view</td>
 <td><code>403 Forbidden</code></td>
-<td><code>{"detail":"Suspicious activity detected"}</code></td>
+<td><code>Suspicious activity detected</code></td>
 </tr>
 <tr>
 <td>Body exceeds the cap</td>
 <td><code>413 Payload Too Large</code></td>
-<td><code>{"detail":"Payload too large"}</code></td>
+<td><code>Payload too large</code></td>
 </tr>
 <tr>
 <td>Body read error or engine panic</td>
 <td><code>500 Internal Server Error</code></td>
-<td><code>{"detail":"Security check failed"}</code></td>
+<td><code>Security check failed</code></td>
 </tr>
 </tbody>
 </table>

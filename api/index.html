@@ -862,7 +862,7 @@ rewrites the <code>404</code> to the guarded <code>403</code> so probe traffic n
 inventory.</p>
 <h3 id="catchers">Catchers</h3>
 <p><code>guard_catchers() -&gt; Vec&lt;Catcher&gt;</code> returns the <code>403</code>/<code>413</code>/<code>500</code> catchers
-that render refusals as the ecosystem's JSON error shape. The fairing
+that render refusals as the ecosystem's plain-text error shape. The fairing
 registers them itself, skipping any status the application already registered
 a catcher for (Rocket treats same-code catchers at the same base as a fatal
 collision).</p>
@@ -1038,17 +1038,17 @@ whatever the handler does with the scanned bytes afterwards.</p>
 <tr>
 <td>Engine flags a view</td>
 <td><code>403 Forbidden</code></td>
-<td><code>{"detail":"Suspicious activity detected"}</code></td>
+<td><code>Suspicious activity detected</code></td>
 </tr>
 <tr>
 <td>Body exceeds the cap</td>
 <td><code>413 Payload Too Large</code></td>
-<td><code>{"detail":"Payload too large"}</code></td>
+<td><code>Payload too large</code></td>
 </tr>
 <tr>
 <td>Body read error or engine panic</td>
 <td><code>500 Internal Server Error</code></td>
-<td><code>{"detail":"Security check failed"}</code></td>
+<td><code>Security check failed</code></td>
 </tr>
 </tbody>
 </table>
