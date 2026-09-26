@@ -147,6 +147,7 @@ pub(crate) type DetectFn = fn(&str, &str, &DetectConfig) -> DetectVerdict;
 /// | `preserve_attack_patterns` | `true` |
 /// | `semantic_threshold` | `0.7` |
 /// | `threat_score_threshold` | `1.0` |
+/// | `binary_min_run_length` | `16` |
 ///
 /// # Example
 ///
@@ -163,6 +164,7 @@ pub const fn default_config() -> DetectConfig {
         preserve_attack_patterns: true,
         semantic_threshold: 0.7,
         threat_score_threshold: 1.0,
+        binary_min_run_length: 16,
     }
 }
 
@@ -178,6 +180,7 @@ mod tests {
         assert!(config.preserve_attack_patterns);
         assert!((config.semantic_threshold - 0.7).abs() < f64::EPSILON);
         assert!((config.threat_score_threshold - 1.0).abs() < f64::EPSILON);
+        assert_eq!(config.binary_min_run_length, 16);
     }
 
     #[test]

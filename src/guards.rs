@@ -157,7 +157,7 @@ impl<'r> FromData<'r> for GuardBody {
             if matches!(metadata, Verdict::Threat | Verdict::Failed) {
                 return metadata;
             }
-            if engine.scan_body(&bytes) {
+            if engine.scan_body(request, &bytes) {
                 Verdict::Threat
             } else {
                 Verdict::Clean

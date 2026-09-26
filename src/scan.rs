@@ -4,6 +4,7 @@
 //! per request view, plus the request-local slots the fairing and the guards
 //! use to hand verdicts to each other (and to the catchers).
 
+use guard_core_engine::body_scan::extract_body_scan_values;
 use guard_core_engine::detect::DetectConfig;
 use rocket::Request;
 use rocket::http::uncased::UncasedStr;
@@ -121,11 +122,29 @@ impl GuardEngine {
         false
     }
 
-    /// Scan the `request_body` view. An empty (or whitespace-only) body is
-    /// not scanned, mirroring the sibling adapters.
-    pub(crate) fn scan_body(&self, bytes: &[u8]) -> bool {
+    /// Scan the `request_body` view through the engine's body-value
+    /// extraction: the body is routed by content type (urlencoded fields,
+    /// multipart parts, JSON walks, blob fallback) and every extracted value
+    /// is scanned with the context the reference engine scans it under; the
+    /// first threat wins. A value with a forced category (a JSON mongo
+    /// operator key the reference reports straight from the JSON walk) is a
+    /// threat outright. An empty (or whitespace-only) body is not scanned,
+    /// mirroring the sibling adapters.
+    pub(crate) fn scan_body(&self, request: &Request<'_>, bytes: &[u8]) -> bool {
         let text = String::from_utf8_lossy(bytes);
-        !text.trim().is_empty() && self.flagged(&text, "request_body")
+        if text.trim().is_empty() {
+            return false;
+        }
+        let content_type = request
+            .headers()
+            .get_one("content-type")
+            .unwrap_or_default();
+        for value in extract_body_scan_values(&text, content_type, &self.config) {
+            if value.forced_category.is_some() || self.flagged(&value.content, &value.context) {
+                return true;
+            }
+        }
+        false
     }
 }
 
