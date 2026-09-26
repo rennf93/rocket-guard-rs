@@ -208,4 +208,128 @@ mod tests {
             Some(FAILURE_MESSAGE)
         );
     }
+
+    // --- body-value extraction through the full stack ---
+
+    use rocket::http::{Header, Status};
+    use rocket::post;
+
+    // The handler must take the `GuardBody` data argument for the body scan
+    // to run; it does not consume the bytes itself.
+    #[post("/echo", data = "<_body>")]
+    fn echo(_body: crate::GuardBody) -> &'static str {
+        "ok"
+    }
+
+    async fn client() -> Client {
+        Client::tracked(
+            rocket::build()
+                .attach(GuardFairing::with_defaults())
+                .mount("/", routes![hello, echo]),
+        )
+        .await
+        .expect("valid rocket")
+    }
+
+    async fn status_for(client: &Client, content_type: &str, body: &[u8]) -> Status {
+        client
+            .post("/echo")
+            .header(Header::new("Content-Type", content_type.to_owned()))
+            .body(body)
+            .dispatch()
+            .await
+            .status()
+    }
+
+    #[tokio::test]
+    async fn sqli_in_a_form_field_is_blocked() {
+        let client = client().await;
+        assert_eq!(
+            status_for(
+                &client,
+                "application/x-www-form-urlencoded",
+                b"q=1+OR+1%3D1"
+            )
+            .await,
+            Status::Forbidden
+        );
+    }
+
+    #[tokio::test]
+    async fn backslash_probe_in_a_form_field_is_blocked_through_the_raw_view() {
+        let client = client().await;
+        assert_eq!(
+            status_for(&client, "application/x-www-form-urlencoded", b"q=\\default").await,
+            Status::Forbidden,
+            "\\default in a form field must stay a recon probe"
+        );
+    }
+
+    #[tokio::test]
+    async fn multipart_binary_island_smuggling_is_not_blocked() {
+        // A binary-dense file part whose only printable fragment is shorter
+        // than the minimum island run: no detection, request forwarded.
+        let mut body = Vec::new();
+        body.extend_from_slice(b"--B0\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"installer.zip\"\r\n\r\n");
+        body.extend_from_slice(&noise_bytes(11, 4096));
+        body.extend_from_slice(b"\x001 OR 1=1\x00");
+        body.extend_from_slice(b"\r\n--B0--\r\n");
+
+        let client = client().await;
+        assert_eq!(
+            status_for(&client, "multipart/form-data; boundary=B0", &body).await,
+            Status::Ok,
+            "the compressed fragment must not pattern-match"
+        );
+    }
+
+    #[tokio::test]
+    async fn plain_multipart_text_part_with_script_is_blocked() {
+        let client = client().await;
+        assert_eq!(
+            status_for(
+                &client,
+                "multipart/form-data; boundary=B0",
+                b"--B0\r\nContent-Disposition: form-data; name=\"note\"\r\n\r\n<script>alert(1)</script>\r\n--B0--\r\n",
+            )
+            .await,
+            Status::Forbidden
+        );
+    }
+
+    #[tokio::test]
+    async fn mongo_operator_key_body_is_blocked() {
+        let client = client().await;
+        assert_eq!(
+            status_for(&client, "application/json", br#"{"$where": "1 OR 1=1"}"#).await,
+            Status::Forbidden
+        );
+    }
+
+    #[tokio::test]
+    async fn benign_multipart_upload_is_forwarded() {
+        let client = client().await;
+        assert_eq!(
+            status_for(
+                &client,
+                "multipart/form-data; boundary=B0",
+                b"--B0\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"notes.txt\"\r\n\r\nhello world\r\n--B0--\r\n",
+            )
+            .await,
+            Status::Ok
+        );
+    }
+
+    /// Deterministic pseudo-random bytes: the binary-dense fixture.
+    fn noise_bytes(seed: u64, size: usize) -> Vec<u8> {
+        let mut state = seed.wrapping_mul(0x9E37_79B9_7F4A_7C15).max(1);
+        let mut out = Vec::with_capacity(size);
+        for _ in 0..size {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            out.push(u8::try_from(state % 256).expect("value below 256"));
+        }
+        out
+    }
 }
