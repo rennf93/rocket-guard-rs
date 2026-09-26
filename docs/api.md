@@ -27,12 +27,49 @@ Constructors and builders:
 | `GuardFairing::new(config: DetectConfig)` | Build the fairing from an engine `DetectConfig`. The body cap starts at `config.max_full_scan_bytes` |
 | `GuardFairing::with_defaults()` | Build the fairing with `default_config()` |
 | `.with_body_cap(body_cap: usize)` | Replace the body buffering cap, in bytes. A body larger than the cap is refused with `413` rather than forwarded unscanned |
+| `.with_ip_gate(ip_gate: IpGateConfig)` | Install the global IP gate (see below) |
 
 Routes without a guard argument are only scanned, not blocked: in Rocket,
 protection is per-route, and that is what the guard argument is for. When the
-verdict is a threat and the request would otherwise answer `404`, the fairing
-rewrites the `404` to the guarded `403` so probe traffic never reveals route
-inventory.
+verdict is a threat (or an IP-gate denial) and the request would otherwise
+answer `404`, the fairing rewrites the `404` to the guarded `403` so probe
+traffic never reveals route inventory.
+
+### The IP gate: `IpGateConfig`
+
+Built with `IpGateConfig::new(whitelist, blacklist, exempt_ips)`, which fails
+closed on an invalid entry (`IpGateError` names the list and the entry):
+
+```rust
+use rocket_guard_rs::{GuardFairing, IpGateConfig};
+
+let gate = IpGateConfig::new(
+    [] as [&str; 0],
+    ["203.0.113.9"],
+    ["198.51.100.7", "198.51.100.16/28"],
+)
+.expect("valid lists");
+let fairing = GuardFairing::with_defaults().with_ip_gate(gate);
+```
+
+The gate runs in `on_request` before the metadata scan, on the request's
+client IP: a blacklisted IP - or an IP a non-empty `whitelist` matches
+neither directly nor through `exempt_ips` - is refused with `403 Forbidden`
+(the `Forbidden` body), both through the guards and through the `404` rewrite
+for unrouted paths. A request whose client IP is unknown (Rocket's local test
+client, for example) is not attributed: the gate does not run and the scan
+runs unconditionally.
+
+**exempt_ips vs whitelist.** `exempt_ips` is noise reduction for
+known-friendly automation (monitoring probes, VPN egress, a partner's
+server), not immunity: it sets the same skip state a whitelist match sets but
+never adds a deny path and never opens the whitelist gate. The blacklist,
+bans-style checks, and detection still apply to exempt IPs - an attack
+payload from an exempt IP is still `403 Suspicious activity detected`. The
+Rust family ships no rate limiter, user-agent filter, cloud-provider blocker,
+or violation counter yet; a stage that lands later must skip exactly what the
+reference skips for a whitelist match (`is_whitelisted || is_exempt`) and
+never skip detection.
 
 ### Catchers
 
@@ -141,6 +178,7 @@ The HTTP method is not scanned.
 
 | Situation | Status | Body |
 |---|---|---|
+| The IP gate denies the client IP | `403 Forbidden` | `Forbidden` |
 | Engine flags a view | `403 Forbidden` | `Suspicious activity detected` |
 | Body exceeds the cap | `413 Payload Too Large` | `Payload too large` |
 | Body read error or engine panic | `500 Internal Server Error` | `Security check failed` |
@@ -157,11 +195,15 @@ Re-exported refusal message bodies:
 | Constant | Value |
 |---|---|
 | `BLOCKED_MESSAGE` | `"Suspicious activity detected"` |
+| `FORBIDDEN_MESSAGE` | `"Forbidden"` |
 | `OVERSIZE_MESSAGE` | `"Payload too large"` |
 | `FAILURE_MESSAGE` | `"Security check failed"` |
 
 ### Engine re-exports
 
 `DetectConfig`, `DetectVerdict`, and `Threat` are re-exported from
-`guard_core_engine::detect`. A `DetectVerdict` carries `is_threat`, a
+`guard_core_engine::detect`.
+
+`IpGateConfig`, `IpGateDecision`, `IpGateDenial`, `IpGateError`, and
+`IpGateVerdict` are re-exported from `guard_core_engine::ip_gate`. A `DetectVerdict` carries `is_threat`, a
 `threat_score`, and the list of `Threat` findings (regex or semantic).

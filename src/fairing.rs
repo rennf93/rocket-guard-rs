@@ -2,6 +2,7 @@
 
 use crate::response;
 use crate::scan::{GuardEngine, Metadata, Verdict};
+use guard_core_engine::ip_gate::IpGateVerdict;
 use rocket::Data;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Status;
@@ -62,17 +63,21 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 #[derive(Clone)]
 pub struct GuardFairing {
     engine: GuardEngine,
+    ip_gate: Option<guard_core_engine::ip_gate::IpGateConfig>,
 }
 
 impl GuardFairing {
     /// Build the fairing from an engine detection configuration.
     ///
     /// The body cap starts at `config.max_full_scan_bytes` (262,144 bytes in
-    /// [`crate::default_config`]), the engine's own full-scan cap.
+    /// [`crate::default_config`]), the engine's own full-scan cap, and no IP
+    /// gate is configured (one can be added with
+    /// [`GuardFairing::with_ip_gate`]).
     #[must_use]
     pub fn new(config: guard_core_engine::detect::DetectConfig) -> Self {
         Self {
             engine: GuardEngine::new(config),
+            ip_gate: None,
         }
     }
 
@@ -80,6 +85,41 @@ impl GuardFairing {
     #[must_use]
     pub fn with_defaults() -> Self {
         Self::new(crate::default_config())
+    }
+
+    /// Install the global IP gate: a `whitelist`/`blacklist`/`exempt_ips`
+    /// config built with
+    /// [`IpGateConfig::new`](guard_core_engine::ip_gate::IpGateConfig::new)
+    /// (which fails closed on an invalid entry).
+    ///
+    /// The gate runs in `on_request` before the metadata scan, on the
+    /// request's client IP: a blacklisted IP - or an IP a non-empty whitelist
+    /// matches neither directly nor through `exempt_ips` - is refused with
+    /// `403 Forbidden`, and a request whose client IP is unknown is not
+    /// attributed and goes through the scan unconditionally. `exempt_ips`
+    /// sets no deny path of its own and never opens the whitelist gate; the
+    /// Rust family has no rate limiter, user-agent filter, cloud-provider
+    /// blocker, or violation counter yet, so there is nothing for the exempt
+    /// flag to skip, and detection always scans every request, exempt or not.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rocket_guard_rs::{GuardFairing, IpGateConfig};
+    ///
+    /// let gate = IpGateConfig::new(
+    ///     [] as [&str; 0],
+    ///     ["203.0.113.9"],
+    ///     ["198.51.100.0/28"],
+    /// )
+    /// .expect("valid lists");
+    /// let fairing = GuardFairing::with_defaults().with_ip_gate(gate);
+    /// # let _ = fairing;
+    /// ```
+    #[must_use]
+    pub fn with_ip_gate(mut self, ip_gate: guard_core_engine::ip_gate::IpGateConfig) -> Self {
+        self.ip_gate = Some(ip_gate);
+        self
     }
 
     /// Replace the body buffering cap, in bytes.
@@ -156,22 +196,44 @@ impl Fairing for GuardFairing {
     }
 
     async fn on_request(&self, request: &mut Request<'_>, _data: &mut Data<'_>) {
-        let verdict = catch_unwind(AssertUnwindSafe(|| {
-            if self.engine.scan_metadata(request) {
-                Verdict::Threat
-            } else {
-                Verdict::Clean
-            }
-        }))
-        .unwrap_or(Verdict::Failed);
+        let verdict = self.evaluate(request);
 
         request.local_cache(|| Metadata(Some(verdict)));
     }
 
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
-        let threat = request.local_cache(|| Metadata(None)).0 == Some(Verdict::Threat);
-        if threat && response.status() == Status::NotFound {
-            *response = response::blocked_response();
+        let verdict = request.local_cache(|| Metadata(None)).0;
+        if response.status() == Status::NotFound {
+            if verdict == Some(Verdict::Threat) {
+                *response = response::blocked_response();
+            } else if verdict == Some(Verdict::IpBlocked) {
+                *response = response::forbidden_response();
+            }
+        }
+    }
+}
+
+impl GuardFairing {
+    /// The request's verdict: the IP gate first (a denied client IP is the
+    /// verdict, no scan needed), then the metadata views, each recovered from
+    /// an engine panic as fail-secure.
+    fn evaluate(&self, request: &Request<'_>) -> Verdict {
+        if let Some(gate) = &self.ip_gate
+            && let Some(ip) = request.client_ip()
+            && let IpGateVerdict::Denied(_) = gate.evaluate(ip)
+        {
+            return Verdict::IpBlocked;
+        }
+
+        match catch_unwind(AssertUnwindSafe(|| {
+            if self.engine.scan_metadata(request) {
+                Verdict::Threat
+            } else {
+                Verdict::Clean
+            }
+        })) {
+            Ok(verdict) => verdict,
+            Err(_) => Verdict::Failed,
         }
     }
 }
@@ -179,7 +241,7 @@ impl Fairing for GuardFairing {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{BlockGuard, FAILURE_MESSAGE};
+    use crate::{BlockGuard, FAILURE_MESSAGE, IpGateConfig};
     use guard_core_engine::detect::{DetectConfig, DetectVerdict};
     use rocket::get;
     use rocket::local::asynchronous::Client;
@@ -188,6 +250,9 @@ mod tests {
     fn panicking_detect(_content: &str, _view: &str, _config: &DetectConfig) -> DetectVerdict {
         panic!("engine exploded");
     }
+
+    /// The empty list, typed so the `new` calls stay inferable.
+    const NIL: [&str; 0] = [];
 
     #[get("/hello")]
     fn hello(_guard: BlockGuard) -> &'static str {
@@ -331,5 +396,176 @@ mod tests {
             out.push(u8::try_from(state % 256).expect("value below 256"));
         }
         out
+    }
+
+    // --- the global IP gate (exempt_ips contract checklist) ---
+
+    use crate::BLOCKED_MESSAGE;
+    use std::net::SocketAddr;
+
+    fn peer(ip: [u8; 4]) -> SocketAddr {
+        SocketAddr::from((ip, 45_000))
+    }
+
+    async fn tracked(fairing: GuardFairing) -> Client {
+        Client::tracked(rocket::build().attach(fairing).mount("/", routes![hello]))
+            .await
+            .expect("valid rocket")
+    }
+
+    #[tokio::test]
+    async fn blacklisted_client_ip_is_denied_with_the_forbidden_body() {
+        // The checklist blacklist: an exact entry (203.0.113.9) and a /24
+        // (192.0.2.0/24); the exempt list is disjoint (198.51.100.x).
+        let gate = IpGateConfig::new(
+            NIL,
+            ["203.0.113.9", "192.0.2.0/24"],
+            ["198.51.100.7", "198.51.100.16/28"],
+        )
+        .expect("valid lists");
+        let client = tracked(GuardFairing::with_defaults().with_ip_gate(gate)).await;
+
+        let response = client
+            .get("/hello")
+            .remote(peer([203, 0, 113, 9]))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), Status::Forbidden);
+        assert_eq!(
+            response.into_string().await.as_deref(),
+            Some(crate::FORBIDDEN_MESSAGE)
+        );
+
+        // The blacklisted /24 denies its whole range.
+        let response = client
+            .get("/hello")
+            .remote(peer([192, 0, 2, 77]))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), Status::Forbidden);
+        assert_eq!(
+            response.into_string().await.as_deref(),
+            Some(crate::FORBIDDEN_MESSAGE)
+        );
+    }
+
+    #[tokio::test]
+    async fn exempt_exact_and_cidr_ips_pass_and_detection_still_applies() {
+        // Checklist: exemption is observable behavior for the exact entry and
+        // the CIDR member alike; the Rust family has no rate limiter yet, so
+        // "skips rate limiting" is pinned at the flag level the contract
+        // defines (the same state a whitelist match sets). Detection must
+        // still scan exempt requests.
+        let gate = IpGateConfig::new(NIL, ["192.0.2.9"], ["198.51.100.7", "198.51.100.16/28"])
+            .expect("valid lists");
+        let client = tracked(GuardFairing::with_defaults().with_ip_gate(gate)).await;
+
+        let response = client
+            .get("/hello")
+            .remote(peer([198, 51, 100, 7]))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), Status::Ok, "the exact exempt IP passes");
+
+        let response = client
+            .get("/hello")
+            .remote(peer([198, 51, 100, 20]))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), Status::Ok, "the CIDR exempt IP passes");
+
+        // Penetration detection still applies to an exempt IP.
+        let response = client
+            .get("/files/../../etc/passwd")
+            .remote(peer([198, 51, 100, 7]))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), Status::Forbidden);
+        assert_eq!(
+            response.into_string().await.as_deref(),
+            Some(BLOCKED_MESSAGE)
+        );
+    }
+
+    #[tokio::test]
+    async fn exempt_ip_on_the_blacklist_is_still_denied() {
+        let gate = IpGateConfig::new(NIL, ["198.51.100.7"], ["198.51.100.7"]).expect("valid lists");
+        let client = tracked(GuardFairing::with_defaults().with_ip_gate(gate)).await;
+        let response = client
+            .get("/hello")
+            .remote(peer([198, 51, 100, 7]))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), Status::Forbidden);
+        assert_eq!(
+            response.into_string().await.as_deref(),
+            Some(crate::FORBIDDEN_MESSAGE)
+        );
+    }
+
+    #[tokio::test]
+    async fn exemption_never_opens_a_restrictive_whitelist() {
+        let gate = IpGateConfig::new(["192.0.2.1"], NIL, ["198.51.100.7"]).expect("valid lists");
+        let client = tracked(GuardFairing::with_defaults().with_ip_gate(gate)).await;
+        let response = client
+            .get("/hello")
+            .remote(peer([198, 51, 100, 7]))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), Status::Forbidden);
+        assert_eq!(
+            response.into_string().await.as_deref(),
+            Some(crate::FORBIDDEN_MESSAGE)
+        );
+    }
+
+    #[tokio::test]
+    async fn an_unrouted_ip_denial_does_not_leak_a_404() {
+        let gate = IpGateConfig::new(NIL, ["203.0.113.9"], NIL).expect("valid lists");
+        let client = tracked(GuardFairing::with_defaults().with_ip_gate(gate)).await;
+        let response = client
+            .get("/definitely/not/routed")
+            .remote(peer([203, 0, 113, 9]))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), Status::Forbidden);
+        assert_eq!(
+            response.into_string().await.as_deref(),
+            Some(crate::FORBIDDEN_MESSAGE)
+        );
+    }
+
+    #[tokio::test]
+    async fn a_cidr_entry_matches_its_range_but_the_blacklist_still_wins() {
+        // The exempt /31 spans 192.0.2.8 and 192.0.2.9; the exact blacklist
+        // entry on 192.0.2.9 denies its own member even though it is exempt.
+        let gate = IpGateConfig::new(NIL, ["192.0.2.9"], ["192.0.2.8/31"]).expect("valid lists");
+        let client = tracked(GuardFairing::with_defaults().with_ip_gate(gate)).await;
+
+        let response = client
+            .get("/hello")
+            .remote(peer([192, 0, 2, 8]))
+            .dispatch()
+            .await;
+        assert_eq!(
+            response.status(),
+            Status::Ok,
+            "the non-blacklisted exempt member passes"
+        );
+
+        let response = client
+            .get("/hello")
+            .remote(peer([192, 0, 2, 9]))
+            .dispatch()
+            .await;
+        assert_eq!(
+            response.status(),
+            Status::Forbidden,
+            "exemption does not win"
+        );
+        assert_eq!(
+            response.into_string().await.as_deref(),
+            Some(crate::FORBIDDEN_MESSAGE)
+        );
     }
 }

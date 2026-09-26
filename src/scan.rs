@@ -33,6 +33,9 @@ pub(crate) enum Verdict {
     Clean,
     /// At least one view was flagged as a threat.
     Threat,
+    /// The IP gate denied the client IP (blacklisted, or a non-empty
+    /// whitelist matched neither the IP nor an exemption).
+    IpBlocked,
     /// The engine panicked; fail secure.
     Failed,
 }

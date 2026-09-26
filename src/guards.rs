@@ -16,6 +16,7 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 /// |---|---|
 /// | Clean | `Success`: the handler runs |
 /// | Threat | `Error(403)`: the bare `Suspicious activity detected` message |
+/// | `IpBlocked` (IP gate denial) | `Error(403)`: the bare `Forbidden` message |
 /// | Failed (engine panic) | `Error(500)`: the bare `Security check failed` message |
 /// | Missing (fairing not attached) | `Error(500)`: fail-secure |
 ///
@@ -50,10 +51,9 @@ impl<'r> FromRequest<'r> for BlockGuard {
             verdict => {
                 let enforced = verdict.unwrap_or(Verdict::Failed);
                 record_enforced(request, enforced);
-                let status = if enforced == Verdict::Threat {
-                    Status::Forbidden
-                } else {
-                    Status::InternalServerError
+                let status = match enforced {
+                    Verdict::Threat | Verdict::IpBlocked => Status::Forbidden,
+                    _ => Status::InternalServerError,
                 };
                 Outcome::Error((status, ()))
             }
@@ -154,7 +154,10 @@ impl<'r> FromData<'r> for GuardBody {
 
         let verdict = catch_unwind(AssertUnwindSafe(|| {
             let metadata = metadata_verdict(request).unwrap_or(Verdict::Clean);
-            if matches!(metadata, Verdict::Threat | Verdict::Failed) {
+            if matches!(
+                metadata,
+                Verdict::Threat | Verdict::IpBlocked | Verdict::Failed
+            ) {
                 return metadata;
             }
             if engine.scan_body(request, &bytes) {
@@ -168,6 +171,7 @@ impl<'r> FromData<'r> for GuardBody {
         match verdict {
             Verdict::Clean => DataOutcome::Success(Self { bytes }),
             Verdict::Threat => refused(request, Verdict::Threat, Status::Forbidden),
+            Verdict::IpBlocked => refused(request, Verdict::IpBlocked, Status::Forbidden),
             Verdict::Failed => refused(request, Verdict::Failed, Status::InternalServerError),
         }
     }

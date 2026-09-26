@@ -4,6 +4,10 @@ All notable changes to this project.
 
 ## [Unreleased]
 
+### Added
+
+- Optional global IP gate (`GuardFairing::with_ip_gate` over the new engine `IpGateConfig`): `whitelist`, `blacklist`, and `exempt_ips` lists parsed once at startup (invalid entry is a config error, fail closed), evaluated in `on_request` before the metadata scan on the request's client IP - a blacklisted client IP, or one a non-empty `whitelist` matches neither directly nor through `exempt_ips`, is refused with `403 Forbidden`, including the unrouted-path `404` rewrite so probe traffic never reveals route inventory. `exempt_ips` is the skip-list for known-friendly automation: it sets the same skip state a whitelist match sets but never adds a deny path and never opens the whitelist gate; the blacklist and detection still apply to exempt IPs. Requests without a client IP (Rocket's local test client) are not attributed and still screened by detection
+
 ### Changed
 
 - The request body is no longer scanned as one lossy blob: it is routed by content type through the engine's body-value extraction (guard-core 4.0.4 parity, upstream commit 5f399234), and every extracted value is scanned through the normal detect path with its reference context - urlencoded field values under `request_body:form_field`, multipart part entries (label scan, `filename="..."` entry with RFC 2231 handling, raw part headers, payload) under `request_body:multipart_field`, embedded JSON leaves under the `:embedded_json` suffix, JSON mongo operator keys (`$where`, `$ne`, ...) as direct `nosql` hits, and the whole-body blob only as the fallback for plain or unparseable bodies

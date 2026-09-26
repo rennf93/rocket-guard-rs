@@ -25,6 +25,9 @@ use std::io::Cursor;
 /// Detail message carried by the `403 Forbidden` block response.
 pub const BLOCKED_MESSAGE: &str = "Suspicious activity detected";
 
+/// Detail message carried by the IP gate's `403 Forbidden` response.
+pub const FORBIDDEN_MESSAGE: &str = "Forbidden";
+
 /// Detail message carried by the `413 Payload Too Large` response.
 pub const OVERSIZE_MESSAGE: &str = "Payload too large";
 
@@ -65,16 +68,19 @@ pub fn guard_catchers() -> Vec<Catcher> {
 /// `403` catcher: the guard body when a guard blocked this request, a
 /// minimal default otherwise.
 fn forbidden<'r>(status: Status, request: &'r Request<'_>) -> BoxFuture<'r> {
-    let guard_caused = metadata_verdict(request) == Some(Verdict::Threat)
-        || enforced_verdict(request) == Some(Verdict::Threat);
-    finish(
-        status,
-        if guard_caused {
-            BLOCKED_MESSAGE
-        } else {
-            DEFAULT_403
-        },
-    )
+    let metadata = metadata_verdict(request);
+    let enforced = enforced_verdict(request);
+    let guard_caused = matches!(metadata, Some(Verdict::Threat | Verdict::IpBlocked))
+        || matches!(enforced, Some(Verdict::Threat | Verdict::IpBlocked));
+    let ip_blocked = metadata == Some(Verdict::IpBlocked) || enforced == Some(Verdict::IpBlocked);
+    let message = if ip_blocked {
+        FORBIDDEN_MESSAGE
+    } else if guard_caused {
+        BLOCKED_MESSAGE
+    } else {
+        DEFAULT_403
+    };
+    finish(status, message)
 }
 
 /// `413` catcher: always the oversize body.
@@ -115,12 +121,20 @@ fn finish<'r>(status: Status, message: &'static str) -> BoxFuture<'r> {
 /// A standalone `403` response with the blocked body, used by
 /// [`crate::GuardFairing`] when rewriting unrouted threat responses.
 pub(crate) fn blocked_response() -> Response<'static> {
+    plain_response(Status::Forbidden, BLOCKED_MESSAGE)
+}
+
+/// A standalone `403` response with the forbidden body, used by
+/// [`crate::GuardFairing`] when rewriting unrouted IP-gate denials.
+pub(crate) fn forbidden_response() -> Response<'static> {
+    plain_response(Status::Forbidden, FORBIDDEN_MESSAGE)
+}
+
+/// The ecosystem's error shape: the bare message, `text/plain; charset=utf-8`.
+fn plain_response(status: Status, message: &'static str) -> Response<'static> {
     Response::build()
-        .status(Status::Forbidden)
+        .status(status)
         .header(ContentType::Plain)
-        .sized_body(
-            BLOCKED_MESSAGE.len(),
-            Cursor::new(BLOCKED_MESSAGE.as_bytes().to_vec()),
-        )
+        .sized_body(message.len(), Cursor::new(message.as_bytes().to_vec()))
         .finalize()
 }
