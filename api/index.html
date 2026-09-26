@@ -383,6 +383,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#the-ip-gate-ipgateconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The IP gate: IpGateConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#catchers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -633,6 +644,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#the-ip-gate-ipgateconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The IP gate: IpGateConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#catchers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -853,13 +875,47 @@ the verdict in request-local state, and <code>on_response</code> supports the <c
 <td><code>.with_body_cap(body_cap: usize)</code></td>
 <td>Replace the body buffering cap, in bytes. A body larger than the cap is refused with <code>413</code> rather than forwarded unscanned</td>
 </tr>
+<tr>
+<td><code>.with_ip_gate(ip_gate: IpGateConfig)</code></td>
+<td>Install the global IP gate (see below)</td>
+</tr>
 </tbody>
 </table>
 <p>Routes without a guard argument are only scanned, not blocked: in Rocket,
 protection is per-route, and that is what the guard argument is for. When the
-verdict is a threat and the request would otherwise answer <code>404</code>, the fairing
-rewrites the <code>404</code> to the guarded <code>403</code> so probe traffic never reveals route
-inventory.</p>
+verdict is a threat (or an IP-gate denial) and the request would otherwise
+answer <code>404</code>, the fairing rewrites the <code>404</code> to the guarded <code>403</code> so probe
+traffic never reveals route inventory.</p>
+<h3 id="the-ip-gate-ipgateconfig">The IP gate: <code>IpGateConfig</code></h3>
+<p>Built with <code>IpGateConfig::new(whitelist, blacklist, exempt_ips)</code>, which fails
+closed on an invalid entry (<code>IpGateError</code> names the list and the entry):</p>
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">rocket_guard_rs</span><span class="p">::{</span><span class="n">GuardFairing</span><span class="p">,</span><span class="w"> </span><span class="n">IpGateConfig</span><span class="p">};</span>
+
+<span class="kd">let</span><span class="w"> </span><span class="n">gate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">IpGateConfig</span><span class="p">::</span><span class="n">new</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[]</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="kt">str</span><span class="p">;</span><span class="w"> </span><span class="mi">0</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="s">"203.0.113.9"</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="s">"198.51.100.7"</span><span class="p">,</span><span class="w"> </span><span class="s">"198.51.100.16/28"</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="p">.</span><span class="n">expect</span><span class="p">(</span><span class="s">"valid lists"</span><span class="p">);</span>
+<span class="kd">let</span><span class="w"> </span><span class="n">fairing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GuardFairing</span><span class="p">::</span><span class="n">with_defaults</span><span class="p">().</span><span class="n">with_ip_gate</span><span class="p">(</span><span class="n">gate</span><span class="p">);</span>
+</code></pre></div>
+<p>The gate runs in <code>on_request</code> before the metadata scan, on the request's
+client IP: a blacklisted IP - or an IP a non-empty <code>whitelist</code> matches
+neither directly nor through <code>exempt_ips</code> - is refused with <code>403 Forbidden</code>
+(the <code>Forbidden</code> body), both through the guards and through the <code>404</code> rewrite
+for unrouted paths. A request whose client IP is unknown (Rocket's local test
+client, for example) is not attributed: the gate does not run and the scan
+runs unconditionally.</p>
+<p><strong>exempt_ips vs whitelist.</strong> <code>exempt_ips</code> is noise reduction for
+known-friendly automation (monitoring probes, VPN egress, a partner's
+server), not immunity: it sets the same skip state a whitelist match sets but
+never adds a deny path and never opens the whitelist gate. The blacklist,
+bans-style checks, and detection still apply to exempt IPs - an attack
+payload from an exempt IP is still <code>403 Suspicious activity detected</code>. The
+Rust family ships no rate limiter, user-agent filter, cloud-provider blocker,
+or violation counter yet; a stage that lands later must skip exactly what the
+reference skips for a whitelist match (<code>is_whitelisted || is_exempt</code>) and
+never skip detection.</p>
 <h3 id="catchers">Catchers</h3>
 <p><code>guard_catchers() -&gt; Vec&lt;Catcher&gt;</code> returns the <code>403</code>/<code>413</code>/<code>500</code> catchers
 that render refusals as the ecosystem's plain-text error shape. The fairing
@@ -1036,6 +1092,11 @@ whatever the handler does with the scanned bytes afterwards.</p>
 </thead>
 <tbody>
 <tr>
+<td>The IP gate denies the client IP</td>
+<td><code>403 Forbidden</code></td>
+<td><code>Forbidden</code></td>
+</tr>
+<tr>
 <td>Engine flags a view</td>
 <td><code>403 Forbidden</code></td>
 <td><code>Suspicious activity detected</code></td>
@@ -1071,6 +1132,10 @@ disables that recovery).</p>
 <td><code>"Suspicious activity detected"</code></td>
 </tr>
 <tr>
+<td><code>FORBIDDEN_MESSAGE</code></td>
+<td><code>"Forbidden"</code></td>
+</tr>
+<tr>
 <td><code>OVERSIZE_MESSAGE</code></td>
 <td><code>"Payload too large"</code></td>
 </tr>
@@ -1082,7 +1147,9 @@ disables that recovery).</p>
 </table>
 <h3 id="engine-re-exports">Engine re-exports</h3>
 <p><code>DetectConfig</code>, <code>DetectVerdict</code>, and <code>Threat</code> are re-exported from
-<code>guard_core_engine::detect</code>. A <code>DetectVerdict</code> carries <code>is_threat</code>, a
+<code>guard_core_engine::detect</code>.</p>
+<p><code>IpGateConfig</code>, <code>IpGateDecision</code>, <code>IpGateDenial</code>, <code>IpGateError</code>, and
+<code>IpGateVerdict</code> are re-exported from <code>guard_core_engine::ip_gate</code>. A <code>DetectVerdict</code> carries <code>is_threat</code>, a
 <code>threat_score</code>, and the list of <code>Threat</code> findings (regex or semantic).</p>
 
 
