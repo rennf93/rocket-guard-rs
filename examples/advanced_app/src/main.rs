@@ -72,6 +72,7 @@ fn admin_stats(_guard: BlockGuard) -> &'static str {
 /// | `GUARD_PRESERVE_ATTACK_PATTERNS` | `preserve_attack_patterns` | `true` |
 /// | `GUARD_SEMANTIC_THRESHOLD` | `semantic_threshold` | `0.7` |
 /// | `GUARD_THREAT_SCORE_THRESHOLD` | `threat_score_threshold` | `1.0` |
+/// | `GUARD_BINARY_MIN_RUN_LENGTH` | `binary_min_run_length` | `16` |
 fn env_config() -> rocket_guard_rs::DetectConfig {
     let defaults = default_config();
     rocket_guard_rs::DetectConfig {
@@ -85,6 +86,10 @@ fn env_config() -> rocket_guard_rs::DetectConfig {
         threat_score_threshold: env_f64(
             "GUARD_THREAT_SCORE_THRESHOLD",
             defaults.threat_score_threshold,
+        ),
+        binary_min_run_length: env_usize(
+            "GUARD_BINARY_MIN_RUN_LENGTH",
+            defaults.binary_min_run_length,
         ),
     }
 }

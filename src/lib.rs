@@ -101,6 +101,7 @@
 //!
 //! | Situation | Status | Body |
 //! |---|---|---|
+//! | The IP gate denies the client IP (blacklisted, or a non-empty whitelist matches neither the IP nor an exemption) | `403 Forbidden` | `Forbidden` |
 //! | Engine flags a view | `403 Forbidden` | `Suspicious activity detected` |
 //! | Body exceeds the cap | `413 Payload Too Large` | `Payload too large` |
 //! | Body read error or engine panic | `500 Internal Server Error` | `Security check failed` |
@@ -123,8 +124,13 @@ mod scan;
 
 pub use crate::fairing::GuardFairing;
 pub use crate::guards::{BlockGuard, GuardBody, GuardBodyError};
-pub use crate::response::{BLOCKED_MESSAGE, FAILURE_MESSAGE, OVERSIZE_MESSAGE, guard_catchers};
+pub use crate::response::{
+    BLOCKED_MESSAGE, FAILURE_MESSAGE, FORBIDDEN_MESSAGE, OVERSIZE_MESSAGE, guard_catchers,
+};
 pub use guard_core_engine::detect::{DetectConfig, DetectVerdict, Threat};
+pub use guard_core_engine::ip_gate::{
+    IpGateConfig, IpGateDecision, IpGateDenial, IpGateError, IpGateVerdict,
+};
 
 /// Engine entry point stored in the fairing.
 ///
